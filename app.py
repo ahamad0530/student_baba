@@ -11,6 +11,11 @@ import joblib
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import secrets
 import sqlite3
+import logging
+
+# Configure logging to see errors in Render logs
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # ─── App Setup ────────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -235,7 +240,6 @@ def dashboard():
 
 
 # ─── Auth Routes ──────────────────────────────────────────────────────────────
-# Auth Routes logic moved up
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -244,108 +248,111 @@ def login():
         
     error = None
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        conn = sqlite3.connect(os.path.join(DATA_DIR, 'predictions.db'))
-        cursor = conn.cursor()
-        
-        user_found = False
-        
-        # 1. Check for Admin
-        if username == 'admin' and (password == 'password' or password == 'Admin@123'):
-            session['user'] = 'admin'
-            session['role'] = 'admin'
-            conn.close()
-            return redirect(url_for('index'))
+        try:
+            username = request.form.get('username')
+            password = request.form.get('password')
             
-        # 2. Check for Teacher Role
-        conn_t = sqlite3.connect(os.path.join(BASE_DIR, 'teacher.db'))
-        cursor_t = conn_t.cursor()
-        cursor_t.execute("SELECT roll_number, name FROM teachers WHERE UPPER(roll_number) = UPPER(?)", (username,))
-        t_row = cursor_t.fetchone()
-        
-        if t_row:
-            verified_roll = t_row[0]
-            teacher_name = t_row[1]
-            if password == verified_roll[1:5]:
-                session['role'] = 'teacher'
-                session['user'] = verified_roll
-                session['name'] = teacher_name
-                # Start with predict mode OFF for teacher
-                session['predict_mode'] = False
-                
-                # Update daily login count and login time logic
-                from datetime import datetime
-                today_str = datetime.now().strftime('%Y-%m-%d')
-                
-                cursor_t.execute("SELECT daily_count, last_login_date FROM teachers WHERE roll_number = ?", (verified_roll,))
-                row_t = cursor_t.fetchone()
-                
-                count = 1
-                if row_t and row_t[1] == today_str:
-                    count = (row_t[0] or 0) + 1
-                
-                cursor_t.execute('''
-                    UPDATE teachers 
-                    SET login_time = CURRENT_TIMESTAMP, 
-                        daily_count = ?, 
-                        last_login_date = ? 
-                    WHERE roll_number = ?
-                ''', (count, today_str, verified_roll))
-                
-                conn_t.commit()
-                conn_t.close()
-                conn.close() # Close predictions.db conn as well
+            logger.info(f"Login attempt for user: {username}")
+            
+            conn = sqlite3.connect(os.path.join(DATA_DIR, 'predictions.db'))
+            cursor = conn.cursor()
+            
+            # 1. Check for Admin
+            if username == 'admin' and (password == 'password' or password == 'Admin@123'):
+                session['user'] = 'admin'
+                session['role'] = 'admin'
+                conn.close()
                 return redirect(url_for('index'))
-            else:
-                error = "Invalid Teacher Password"
-        conn_t.close()
-        
-        # 3. Check for Student Role
-        if not t_row and not error:
-            cursor.execute("SELECT roll_number FROM predictions WHERE UPPER(roll_number) = UPPER(?)", (username,))
-            s_row = cursor.fetchone()
-            if s_row:
-                roll_num = s_row[0]
-                if password == roll_num[-4:]:
-                    session['user'] = roll_num
-                    session['role'] = 'student'
+                
+            # 2. Check for Teacher Role
+            conn_t = sqlite3.connect(os.path.join(DATA_DIR, 'teacher.db'))
+            cursor_t = conn_t.cursor()
+            cursor_t.execute("SELECT roll_number, name FROM teachers WHERE UPPER(roll_number) = UPPER(?)", (username,))
+            t_row = cursor_t.fetchone()
+            
+            if t_row:
+                verified_roll = t_row[0]
+                teacher_name = t_row[1]
+                if password == verified_roll[1:5]:
+                    session['role'] = 'teacher'
+                    session['user'] = verified_roll
+                    session['name'] = teacher_name
+                    session['predict_mode'] = False
                     
-                    # Record student login activity
                     from datetime import datetime
-                    now = datetime.now()
-                    login_time = now.strftime('%Y-%m-%d %H:%M:%S')
-                    login_date = now.strftime('%Y-%m-%d')
+                    today_str = datetime.now().strftime('%Y-%m-%d')
                     
-                    cursor.execute("SELECT login_count, login_date FROM student_activity WHERE roll_number = ?", (roll_num,))
-                    s_row_act = cursor.fetchone()
+                    cursor_t.execute("SELECT daily_count, last_login_date FROM teachers WHERE roll_number = ?", (verified_roll,))
+                    row_t = cursor_t.fetchone()
                     
                     count = 1
-                    if s_row_act:
-                        if s_row_act[1] == login_date:
-                            count = (s_row_act[0] or 0) + 1
-                        
-                        cursor.execute('''
-                            UPDATE student_activity 
-                            SET login_time = ?, login_date = ?, login_count = ?
-                            WHERE roll_number = ?
-                        ''', (login_time, login_date, count, roll_num))
-                    else:
-                        cursor.execute('''
-                            INSERT INTO student_activity (roll_number, login_time, login_date, login_count)
-                            VALUES (?, ?, ?, ?)
-                        ''', (roll_num, login_time, login_date, count))
+                    if row_t and row_t[1] == today_str:
+                        count = (row_t[0] or 0) + 1
                     
-                    conn.commit()
+                    cursor_t.execute('''
+                        UPDATE teachers 
+                        SET login_time = CURRENT_TIMESTAMP, 
+                            daily_count = ?, 
+                            last_login_date = ? 
+                        WHERE roll_number = ?
+                    ''', (count, today_str, verified_roll))
+                    
+                    conn_t.commit()
+                    conn_t.close()
                     conn.close()
                     return redirect(url_for('index'))
                 else:
-                    error = "Invalid Student Password"
-            else:
-                error = "Roll Number Not Found"
+                    error = "Invalid Teacher Password"
+            conn_t.close()
+            
+            # 3. Check for Student Role
+            if not t_row and not error:
+                cursor.execute("SELECT roll_number FROM predictions WHERE UPPER(roll_number) = UPPER(?)", (username,))
+                s_row = cursor.fetchone()
+                if s_row:
+                    roll_num = s_row[0]
+                    if password == roll_num[-4:]:
+                        session['user'] = roll_num
+                        session['role'] = 'student'
+                        
+                        from datetime import datetime
+                        now = datetime.now()
+                        login_time = now.strftime('%Y-%m-%d %H:%M:%S')
+                        login_date = now.strftime('%Y-%m-%d')
+                        
+                        cursor.execute("SELECT login_count, login_date FROM student_activity WHERE roll_number = ?", (roll_num,))
+                        s_row_act = cursor.fetchone()
+                        
+                        count = 1
+                        if s_row_act:
+                            if s_row_act[1] == login_date:
+                                count = (s_row_act[0] or 0) + 1
+                            
+                            cursor.execute('''
+                                UPDATE student_activity 
+                                SET login_time = ?, login_date = ?, login_count = ?
+                                WHERE roll_number = ?
+                            ''', (login_time, login_date, count, roll_num))
+                        else:
+                            cursor.execute('''
+                                INSERT INTO student_activity (roll_number, login_time, login_date, login_count)
+                                VALUES (?, ?, ?, ?)
+                            ''', (roll_num, login_time, login_date, count))
+                        
+                        conn.commit()
+                        conn.close()
+                        return redirect(url_for('index'))
+                    else:
+                        error = "Invalid Student Password"
+                else:
+                    error = "Roll Number Not Found"
                 
-        conn.close()
+            conn.close()
+        except Exception as e:
+            logger.error(f"Login Error: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return f"Login Error: {str(e)}", 500
             
     return render_template('login.html', error=error)
 
