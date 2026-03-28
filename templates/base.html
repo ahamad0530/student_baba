@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Student Performance Prediction{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="/">Student <span class="hl">Predict.</span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto gap-1">
+          {% if session.get('user') %}
+            {% if session.get('role') == 'teacher' %}
+              <li class="nav-item d-flex align-items-center me-3">
+                <span style="color: var(--accent2); font-weight: 600; font-size: 0.95rem; cursor: default;">
+                  👋 Welcome, {{ session.get('name') or 'N/A' }} <span style="font-weight: 400; font-size: 0.85rem;">({{ session.get('user') }})</span>
+                </span>
+              </li>
+            {% endif %}
+            <li class="nav-item"><a class="nav-link {% if request.path=='/' %}active{% endif %}" href="/">Home</a></li>
+            
+            {% if session.get('role') == 'admin' %}
+              <li class="nav-item"><a class="nav-link {% if request.path=='/predict' %}active{% endif %}" href="/predict">Predict</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.path=='/add_manual' %}active{% endif %}" href="/add_manual">Add Data</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.path=='/view_teachers' %}active{% endif %}" href="/view_teachers">Teachers</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.path=='/view_student_activity' %}active{% endif %}" href="/view_student_activity">Students</a></li>
+            {% elif session.get('role') == 'teacher' %}
+              {% if session.get('predict_mode') %}
+                <li class="nav-item"><a class="nav-link {% if request.path=='/predict' %}active{% endif %}" href="/predict">Predict</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.path=='/add_manual' %}active{% endif %}" href="/add_manual">Add Data</a></li>
+              {% endif %}
+            {% elif session.get('role') == 'student' %}
+              <li class="nav-item"><a class="nav-link {% if request.path=='/student_predict' %}active{% endif %}" href="/student_predict">My Result</a></li>
+            {% endif %}
+
+            <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle {% if request.path.startswith('/department') %}active{% endif %}" href="#" id="deptDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Department
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="deptDropdown">
+              <li><a class="dropdown-item" href="/department#cse">CSE</a></li>
+              <li><a class="dropdown-item" href="/department#ece">ECE</a></li>
+              <li><a class="dropdown-item" href="/department#eee">EEE</a></li>
+              <li><a class="dropdown-item" href="/department#it">IT</a></li>
+              <li><a class="dropdown-item" href="/department#aiml-ds">AI & ML</a></li>
+            </ul>
+          </li>
+          <li class="nav-item"><a class="nav-link {% if request.path=='/about' %}active{% endif %}" href="/about">About</a></li>
+          <li class="nav-item"><a class="nav-link {% if request.path=='/contact' %}active{% endif %}" href="/contact">Contact</a></li>
+          <li class="nav-item"><a class="nav-link text-red" href="/logout" style="font-weight: 600;">Logout</a></li>
+          {% else %}
+          <li class="nav-item"><a class="nav-link text-accent2" href="/login" style="font-weight: 600;">Login</a></li>
+          {% endif %}
+        </ul>
+      </div>
+  </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<!-- Footer -->
+<footer>
+  <p>Student Performance Prediction System &nbsp;·&nbsp; Built with Python, Flask &amp; scikit-learn</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Dynamic colorful themes for headings and accents
+  const palettes = [
+    ['#2D60FF', '#8A2BE2'], // Blue to Purple
+    ['#FF2A54', '#FF9A44'], // Pink to Orange
+    ['#00C9FF', '#92FE9D'], // Cyan to Mint
+    ['#F018FF', '#FF5CEB'], // Fuchsia
+    ['#FF0076', '#590FB7'], // Bright red to deep violet
+    ['#00B4DB', '#0083B0'], // Sky Blue
+    ['#7F00FF', '#E100FF'], // Deep Purple to Neon Purple
+    ['#11998E', '#38EF7D'], // Green
+    ['#FF416C', '#FF4B2B']  // Cherry to Red
+  ];
+
+  function changeColors() {
+    const palette = palettes[Math.floor(Math.random() * palettes.length)];
+    document.documentElement.style.setProperty('--accent', palette[0]);
+    document.documentElement.style.setProperty('--accent2', palette[1]);
+    
+    // Also randomly colorize headings directly
+    const headings = document.querySelectorAll('h1, h2, h3, .navbar-brand');
+    headings.forEach(h => {
+      // randomly pick one of the two accent colors for headings
+      h.style.color = Math.random() > 0.5 ? palette[0] : palette[1];
+    });
+  }
+
+  // Initial change (a bit of delay to allow render)
+  window.colorTimeout = setTimeout(changeColors, 200);
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
+

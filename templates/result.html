@@ -1,0 +1,359 @@
+
+{% extends "base.html" %}
+{% block title %}Result — Student Performance Prediction{% endblock %}
+
+{% block content %}
+<section style="padding: 50px 0 80px;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+
+        <!-- Header -->
+        <div class="text-center mb-5 fade-up">
+          <div class="hero-tag" style="margin-bottom:14px">✅ Prediction Complete</div>
+          <h1 class="section-title" style="font-size:2rem">Prediction Result</h1>
+          <p class="section-sub" style="font-size:1.1rem; color:var(--text); margin-bottom: 0;">
+            {% if roll_number and roll_number != 'N/A' %}
+            Roll Number: <strong style="color:var(--accent2)">{{ roll_number }}</strong>
+            {% endif %}
+            {% if academic_year and academic_year != 'N/A' %}
+            <span style="opacity: 0.5; margin: 0 10px;">|</span> Year: <strong style="color:var(--accent2)">{{ academic_year }}</strong>
+            {% endif %}
+          </p>
+        </div>
+
+        <!-- Score + Grade Row -->
+        <div class="row g-4 mb-4">
+
+          <!-- Score Ring -->
+          <div class="col-md-5">
+            <div class="card-dark text-center fade-up">
+              <p style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:18px">Predicted Final Score</p>
+              <div class="score-ring-wrap">
+                <svg viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="#1E1E3F" stroke-width="10"/>
+                  <circle cx="60" cy="60" r="52" fill="none"
+                          stroke="url(#grad)" stroke-width="10"
+                          stroke-linecap="round"
+                          stroke-dasharray="{{ (score / 100 * 326.73) | round(2) }} 326.73"/>
+                  <defs>
+                    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      {% if score >= 70 %}
+                      <stop offset="0%" stop-color="#34D399"/>
+                      <stop offset="100%" stop-color="#059669"/>
+                      {% else %}
+                      <stop offset="0%" stop-color="#F87171"/>
+                      <stop offset="100%" stop-color="#B91C1C"/>
+                      {% endif %}
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="score-ring-val">
+                  <span class="num">{{ score }}</span>
+                  <span class="lbl">/ 100</span>
+                </div>
+              </div>
+              {% set result_color = '#10B981' if score >= 70 else '#EF4444' %}
+              <div class="grade-badge" style="color: {{ result_color }}; border-color: {{ result_color }};">{{ grade }}</div>
+              <div style="font-size:1.1rem;font-weight:700;color:{{ result_color }};margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">{{ label }}</div>
+              <div style="font-size:.85rem;color:var(--muted)">Better than <strong style="color:var(--accent2)">{{ percentile }}%</strong> of dataset</div>
+            </div>
+          </div>
+
+          <!-- Input Summary -->
+          <div class="col-md-7">
+            <div class="card-dark h-100 fade-up fade-up-1">
+              <h2 class="section-title mb-3" style="font-size:1.1rem">Input Summary</h2>
+
+              {% set field_map = [
+                ('📚','Study Hours',       inputs.study_hours,           16),
+                ('🏫','Attendance',         inputs.attendance,            100),
+                ('📝','Assignments',        inputs.assignments_completed,  10),
+                ('📋','Previous Percentage',     inputs.previous_grade,        100),
+                ('🙋','Participation',      inputs.participation,          10),
+                ('😴','Sleep Hours',        inputs.sleep_hours,            12),
+                ('📱','Internet Usage',     inputs.internet_usage,         12),
+              ] %}
+
+              {% for icon, label_txt, val, max_val in field_map %}
+              <div class="prog-row">
+                <div class="prog-label">
+                  <span>{{ icon }} {{ label_txt }}</span>
+                  <span class="text-accent2">{{ val }}</span>
+                </div>
+                <div class="prog-track">
+                  <div class="prog-fill" style="width: {{ [(val / max_val * 100), 100]|min }}%"></div>
+                </div>
+              </div>
+              {% endfor %}
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="card-dark mb-4 fade-up fade-up-2">
+          <h2 class="section-title mb-3" style="font-size:1.15rem">💡 Improvement Recommendations</h2>
+          {% for tip in tips %}
+          <div class="tip-item">{{ tip }}</div>
+          {% endfor %}
+        </div>
+
+        <!-- Performance Band -->
+        <div class="card-dark mb-4 fade-up fade-up-3" style="padding:22px 24px">
+          <h2 class="section-title mb-3" style="font-size:1.1rem">Performance Bands</h2>
+          <div class="row g-2">
+            {% set bands = [
+              ('A+','90–100','Outstanding','#10B981'),
+              ('A','80–89','Excellent','#6366F1'),
+              ('B','70–79','Good','#818CF8'),
+              ('C','60–69','Average','#F59E0B'),
+              ('D','50–59','Below Avg','#F97316'),
+              ('F','< 50','Fail','#EF4444'),
+            ] %}
+            {% for g, rng, desc, col in bands %}
+            <div class="col-6 col-md-2">
+              <div style="background:rgba(0,0,0,.25);border:1px solid {{ col }}33;border-radius:10px;padding:10px;text-align:center;
+                          {% if grade == g %}box-shadow:0 0 0 2px {{ col }};{% endif %}">
+                <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:{{ col }}">{{ g }}</div>
+                <div style="font-size:.72rem;color:#94A3B8">{{ rng }}</div>
+                <div style="font-size:.75rem;color:#94A3B8">{{ desc }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Global Context -->
+        <div class="row g-4 mb-4 fade-up fade-up-3">
+          <div class="col-md-4">
+            <div class="stat-card" style="padding: 15px;">
+              <div class="stat-val" style="font-size: 1.5rem;">{{ global_stats.total }}</div>
+              <div class="stat-lbl">Total Students</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="stat-card" style="padding: 15px;">
+              <div class="stat-val" style="font-size: 1.5rem;">{{ global_stats.avg }}</div>
+              <div class="stat-lbl">Global Avg Score</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="stat-card" style="padding: 15px;">
+              <div class="stat-val" style="font-size: 1.5rem;">{{ global_stats.pass_rate }}%</div>
+              <div class="stat-lbl">Global Pass Rate</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historical Trend Chart -->
+        <div class="card-dark mb-4 fade-up fade-up-4" style="padding:22px 24px;" id="chartBox">
+          <h2 class="section-title mb-2" style="font-size:1.1rem">📈 Previous Performance Timeline</h2>
+          <p style="font-size:0.85rem; color:var(--muted); margin-bottom: 16px;">
+            {% if roll_number and roll_number != 'N/A' %}
+            Click "Fetch" to view performance history for <strong style="color:var(--accent2)">{{ roll_number }}</strong>.
+            {% else %}
+            No roll number provided for performance history.
+            {% endif %}
+          </p>
+
+          {% if roll_number and roll_number != 'N/A' %}
+          <div class="mb-4">
+            <button id="showHistoryBtn" class="btn-accent" style="padding: 8px 20px;">Fetch</button>
+          </div>
+          {% endif %}
+
+          <div id="chartContainer" style="height: 300px; width: 100%; display: none;">
+            <canvas id="historyChart"></canvas>
+          </div>
+          <div id="historyError" style="display: none; color: var(--red); font-size: 0.9rem; font-weight: 500;">No history found for this student.</div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex gap-3 flex-wrap fade-up fade-up-4">
+          <a href="/predict" class="btn-accent">🔄 Predict Again</a>
+          <a href="/" class="btn-outline">🏠 Home</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Animate progress bars on load
+window.addEventListener('load', () => {
+  document.querySelectorAll('.prog-fill').forEach(bar => {
+    const w = bar.style.width;
+    bar.style.width = '0%';
+    setTimeout(() => { bar.style.width = w; }, 200);
+  });
+});
+
+// History Fetch Logic
+let historyChartInstance = null;
+
+const rawHistory = {{ historical_data | safe }};
+const chartContainer = document.getElementById('chartContainer');
+const errorDiv = document.getElementById('historyError');
+const showHistoryBtn = document.getElementById('showHistoryBtn');
+
+if (showHistoryBtn) {
+    showHistoryBtn.addEventListener('click', () => {
+        if (Object.keys(rawHistory).length > 0) {
+            chartContainer.style.display = 'block';
+            errorDiv.style.display = 'none';
+            renderManualHistoryChart(rawHistory);
+            showHistoryBtn.style.display = 'none'; // hide button after fetching
+        } else {
+            chartContainer.style.display = 'none';
+            errorDiv.style.display = 'block';
+        }
+    });
+}
+
+function renderManualHistoryChart(rawHistory) {
+    const semesters = [
+        { key: '0',   label: ['0', 'Entrance'] },
+        { key: '1-1', label: ['1-1', '1st Year'] },
+        { key: '1-2', label: ['1-2', '1st Year'] },
+        { key: '2-1', label: ['2-1', '2nd Year'] },
+        { key: '2-2', label: ['2-2', '2nd Year'] },
+        { key: '3-1', label: ['3-1', '3rd Year'] },
+        { key: '3-2', label: ['3-2', '3rd Year'] },
+        { key: '4-1', label: ['4-1', '4th Year'] },
+        { key: '4-2', label: ['4-2', '4th Year'] }
+    ];
+
+    let dataMap = {};
+    // Default 0 point if not in data
+    dataMap['0'] = rawHistory['Entrance'] || rawHistory['0'] || 0;
+
+    for (let dbKey in rawHistory) {
+        if (dbKey.includes('1-1')) dataMap['1-1'] = rawHistory[dbKey];
+        else if (dbKey.includes('1-2')) dataMap['1-2'] = rawHistory[dbKey];
+        else if (dbKey.includes('2-1')) dataMap['2-1'] = rawHistory[dbKey];
+        else if (dbKey.includes('2-2')) dataMap['2-2'] = rawHistory[dbKey];
+        else if (dbKey.includes('3-1')) dataMap['3-1'] = rawHistory[dbKey];
+        else if (dbKey.includes('3-2')) dataMap['3-2'] = rawHistory[dbKey];
+        else if (dbKey.includes('4-1')) dataMap['4-1'] = rawHistory[dbKey];
+        else if (dbKey.includes('4-2')) dataMap['4-2'] = rawHistory[dbKey];
+        // Fallbacks for generic year keys
+        else if (dbKey.includes('1st Year')) dataMap['1-1'] = rawHistory[dbKey];
+        else if (dbKey.includes('2nd Year')) dataMap['2-1'] = rawHistory[dbKey];
+        else if (dbKey.includes('3rd Year')) dataMap['3-1'] = rawHistory[dbKey];
+        else if (dbKey.includes('4th Year')) dataMap['4-1'] = rawHistory[dbKey];
+    }
+    
+    let labels = [];
+    let fullData = [];
+    
+    semesters.forEach(sem => {
+        if (dataMap[sem.key] !== undefined) {
+            labels.push(sem.label);
+            fullData.push(dataMap[sem.key]);
+        }
+    });
+
+    const ctx = document.getElementById('historyChart').getContext('2d');
+    
+    if (historyChartInstance) {
+        historyChartInstance.destroy();
+    } 
+
+    historyChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Final Score',
+                data: fullData,
+                segment: {
+                    borderColor: ctx => {
+                        if (ctx.p0.parsed.x === 0) return '#10B981'; // Green for 0 to 1-1
+                        return ctx.p0.parsed.y <= ctx.p1.parsed.y ? '#10B981' : '#EF4444';
+                    },
+                    borderWidth: 1.5 // Consistent small line size for the entire timeline
+                },
+                backgroundColor: 'rgba(45, 96, 255, 0.1)',
+                borderWidth: 4,
+                pointStyle: 'triangle',
+                rotation: 90,
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                pointBackgroundColor: ctx => {
+                    if (ctx.dataIndex === 0) return '#10B981';
+                    return ctx.raw >= ctx.dataset.data[ctx.dataIndex - 1] ? '#10B981' : '#EF4444';
+                },
+                pointBorderColor: ctx => {
+                    if (ctx.dataIndex === 0) return '#10B981';
+                    return ctx.raw >= ctx.dataset.data[ctx.dataIndex - 1] ? '#10B981' : '#EF4444';
+                },
+                fill: true,
+                tension: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { min: 0, max: 100, ticks: { stepSize: 10, color: '#64748B' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+                x: { ticks: { color: '#64748B' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+            },
+            plugins: { legend: { display: false } },
+            animation: {
+                x: {
+                    type: 'number',
+                    easing: 'linear',
+                    duration: 800,
+                    from: NaN,
+                    delay(ctx) {
+                        if (ctx.type !== 'data' || ctx.xStarted) { return 0; }
+                        ctx.xStarted = true;
+                        return ctx.index * 800;
+                    }
+                },
+                y: {
+                    type: 'number',
+                    easing: 'linear',
+                    duration: 800,
+                    from(ctx) {
+                        return ctx.index === 0 ? ctx.chart.scales.y.getPixelForValue(100) : ctx.chart.getDatasetMeta(ctx.datasetIndex).data[ctx.index - 1].getProps(['y'], true).y;
+                    },
+                    delay(ctx) {
+                        if (ctx.type !== 'data' || ctx.yStarted) { return 0; }
+                        ctx.yStarted = true;
+                        return ctx.index * 800;
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Fix colors based on the result and stop random color changes
+if (window.colorInterval) clearInterval(window.colorInterval);
+if (window.colorTimeout) clearTimeout(window.colorTimeout);
+
+const resultColor = "{{ '#10B981' if score >= 70 else '#EF4444' }}";
+const resultBg = "{{ 'rgba(16, 185, 129, 0.05)' if score >= 70 else 'rgba(239, 68, 68, 0.05)' }}";
+
+// Set base accent colors
+document.documentElement.style.setProperty('--accent', resultColor);
+document.documentElement.style.setProperty('--accent2', resultColor);
+
+// Set body background color
+document.body.style.backgroundColor = resultBg;
+
+// Colorize headings to match result
+document.querySelectorAll('h1, h2, h3, .navbar-brand').forEach(h => {
+  h.style.color = resultColor;
+});
+</script>
+{% endblock %}

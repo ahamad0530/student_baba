@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}My Performance — Student Prediction{% endblock %}
+
+{% block content %}
+<section style="padding: 100px 0 120px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                
+                <div class="text-center mb-5 fade-up">
+                    <div class="hero-tag" style="margin-bottom:14px">🎓 Student Portal</div>
+                    <h1 class="section-title" style="font-size:2rem">View Your Performance</h1>
+                    <p class="section-sub">Select your semester to see your detailed academic forecast and historical trends.</p>
+                </div>
+
+                {% if error %}
+                <div class="alert-custom mb-4 fade-up">
+                    <span style="font-size: 1.2rem; margin-right: 8px;">ℹ️</span> {{ error }}
+                </div>
+                {% endif %}
+
+                <div class="card-dark fade-up fade-up-1">
+                    <form action="/student_predict" method="POST">
+                        <div class="mb-4">
+                            <label class="form-label opacity-75">Logged in as</label>
+                            <div class="d-flex align-items-center p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border);">
+                                <div style="font-size: 1.5rem; margin-right: 15px;">👤</div>
+                                <div>
+                                    <div style="font-weight: 700; color: var(--accent); font-size: 1.1rem;">{{ roll_number }}</div>
+                                    <div style="font-size: 0.8rem; color: var(--muted);">Academic Record Verified</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="academicYearSelect" class="form-label">Select Academic Year / Semester</label>
+                            <select name="academic_year" id="academicYearSelect" class="form-select" required>
+                                <option value="" disabled selected>Choose Semester...</option>
+                                <option value="1st Year (1-1)">1st Year (1-1)</option>
+                                <option value="1st Year (1-2)">1st Year (1-2)</option>
+                                <option value="2nd Year (2-1)">2nd Year (2-1)</option>
+                                <option value="2nd Year (2-2)">2nd Year (2-2)</option>
+                                <option value="3rd Year (3-1)">3rd Year (3-1)</option>
+                                <option value="3rd Year (3-2)">3rd Year (3-2)</option>
+                                <option value="4th Year (4-1)">4th Year (4-1)</option>
+                                <option value="4th Year (4-2)">4th Year (4-2)</option>
+                            </select>
+                            <div class="input-hint">Results will be fetched from your most recent assessment.</div>
+                        </div>
+
+                        <button type="submit" class="btn-accent w-100 justify-content-center" style="padding: 16px;">
+                            🚀 View My Performance Result
+                        </button>
+                    </form>
+                </div>
+
+                <div class="mt-4 text-center fade-up fade-up-2">
+                    <p style="color: var(--muted); font-size: 0.85rem;">
+                        Can't find your results? Please ensure your data has been uploaded by the department.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Student Performance Prediction{% endblock %}
+
+{% block content %}
+<section style="padding: 50px 0 80px;">
+  <div class="container">
+    
+    <!-- Header -->
+    <div class="mb-5 fade-up">
+      <div class="hero-tag" style="margin-bottom:14px">🏆 Prediction Dashboard</div>
+      <h1 class="section-title" style="font-size:2rem">Recent Results</h1>
+      <p class="section-sub">Overview of the most recently predicted student performances</p>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="row g-4 mb-5 fade-up fade-up-1">
+      <div class="col-md-3 col-6">
+        <div class="card-dark text-center" style="padding: 20px;">
+          <h3 style="font-size:2rem;color:var(--accent2);margin:0">{{ summary.total }}</h3>
+          <p style="font-size:0.85rem;color:var(--muted);margin:0;text-transform:uppercase;letter-spacing:1px">Total Records</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card-dark text-center" style="padding: 20px;">
+          <h3 style="font-size:2rem;color:var(--text);margin:0">{{ summary.avg_score }}</h3>
+          <p style="font-size:0.85rem;color:var(--muted);margin:0;text-transform:uppercase;letter-spacing:1px">Avg Score</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card-dark text-center" style="padding: 20px;">
+          <h3 style="font-size:2rem;color:#10B981;margin:0">{{ summary.pass_rate }}%</h3>
+          <p style="font-size:0.85rem;color:var(--muted);margin:0;text-transform:uppercase;letter-spacing:1px">Pass Rate</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card-dark text-center" style="padding: 20px;">
+          <h3 style="font-size:2rem;color:#8A2BE2;margin:0">{{ summary.top_performers }}</h3>
+          <p style="font-size:0.85rem;color:var(--muted);margin:0;text-transform:uppercase;letter-spacing:1px">Top Performers</p>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- Model Analysis & EDA -->
+    <div class="mb-4 mt-5 fade-up">
+      <h2 class="section-title" style="font-size:1.75rem">Model Analysis & Insights</h2>
+      <p class="section-sub">Data distribution and machine learning evaluations matching backend results</p>
+    </div>
+
+    <!-- Feature Importance & Model Performance -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <div class="card-dark h-100 fade-up">
+          <h2 class="section-title mb-1" style="font-size:1.15rem">Feature Importance</h2>
+          <p class="section-sub" style="margin-bottom:18px">Random Forest (Prediction Drivers)</p>
+          <div id="plotFeat" style="height: 320px;"></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card-dark h-100 fade-up fade-up-2">
+          <h2 class="section-title mb-1" style="font-size:1.15rem">Regression Models</h2>
+          <p class="section-sub" style="margin-bottom:20px">Evaluated on test holdout</p>
+          <table class="metrics-table">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>R² Score</th>
+                <th>MAE</th>
+                <th>MSE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for name, m in metrics.items() %}
+              <tr>
+                <td>
+                  {{ name }}
+                  {% if m.R2 == metrics.values()|map(attribute='R2')|max %}
+                  <span class="badge-best ms-1">Best</span>
+                  {% endif %}
+                </td>
+                <td class="text-accent2">{{ "%.4f"|format(m.R2) }}</td>
+                <td>{{ "%.2f"|format(m.MAE) }}</td>
+                <td>{{ "%.2f"|format(m.MSE) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <div class="divider"></div>
+          <p style="font-size:.82rem;color:var(--muted)">
+            Linear Regression achieves the highest R², explaining ~89.6% of variance in scores.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Graphs -->
+    <div class="row g-4 mb-4 fade-up fade-up-3">
+      <div class="col-md-6">
+        <div class="card-dark pb-2">
+          <div id="plotStudy" style="height: 320px;"></div>
+          <p class="graph-caption">Study Hours vs Final Score</p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card-dark pb-2">
+          <h2 class="section-title mb-1" style="font-size:1.15rem; margin-top:-10px">Grade Distribution</h2>
+          <canvas id="gradeChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>
+// --- Chart.js block (Grade Distribution) ---
+const gradeData = {{ grade_dist | safe }};
+const labels = Object.keys(gradeData);
+const values = Object.values(gradeData);
+const colors = ['#EF4444','#F97316','#F59E0B','#10B981','#2D60FF','#8A2BE2'];
+
+new Chart(document.getElementById('gradeChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [{
+      label: 'Students',
+      data: values,
+      backgroundColor: colors.slice(0, labels.length),
+      borderRadius: 7,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1C233C',
+        borderColor: '#2C3655',
+        borderWidth: 1,
+        titleColor: '#E2E8F0',
+        bodyColor: '#94A3B8',
+      }
+    },
+    scales: {
+      x: { grid: { color: '#2C3655' }, ticks: { color: '#94A3B8', font: { size: 11 } } },
+      y: { grid: { color: '#2C3655' }, ticks: { color: '#94A3B8', font: { size: 11 } } }
+    }
+  }
+});
+
+// --- Plotly live block ---
+const cData = {{ chart_data | safe }};
+const layoutBase = {
+  paper_bgcolor: 'rgba(0,0,0,0)',
+  plot_bgcolor: 'rgba(0,0,0,0)',
+  font: { color: '#94A3B8', family: 'Roboto' },
+  margin: { t: 30, r: 20, l: 40, b: 40 },
+  xaxis: { gridcolor: '#2C3655', zerolinecolor: '#2C3655' },
+  yaxis: { gridcolor: '#2C3655', zerolinecolor: '#2C3655' }
+};
+
+Plotly.newPlot('plotStudy', [{
+  x: cData.study_vs_score.x,
+  y: cData.study_vs_score.y,
+  mode: 'markers',
+  marker: { color: '#2D60FF', size: 6, opacity: 0.6 }
+}], { ...layoutBase, title: 'Study vs Score' }, {responsive: true});
+
+let featSorted = cData.feat_imp.labels.map((l, i) => ({l, v: cData.feat_imp.values[i]})).sort((a,b)=>a.v-b.v);
+Plotly.newPlot('plotFeat', [{
+  x: featSorted.map(o=>o.v),
+  y: featSorted.map(o=>o.l),
+  type: 'bar',
+  orientation: 'h',
+  marker: { color: '#10B981', opacity: 0.85 }
+}], { ...layoutBase, margin: { t:20, r:20, l:150, b:40 } }, {responsive: true});
+</script>
+{% endblock %}

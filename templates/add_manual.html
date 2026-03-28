@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}Add Manual Data — Student Performance Prediction{% endblock %}
+
+{% block content %}
+<section style="padding: 50px 0 80px;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+
+        <!-- Header -->
+        <div class="text-center mb-5 fade-up">
+          <div class="hero-tag" style="margin-bottom:14px">📝 Manual Data Entry</div>
+          <h1 class="section-title" style="font-size:2rem">Add Student Data</h1>
+          <p class="section-sub">Directly enter a student's past performance data into the database.</p>
+        </div>
+
+        {% if success %}
+        <div class="alert alert-success alert-custom mb-4 fade-up" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent); color: var(--accent);">✅ {{ success }}</div>
+        {% endif %}
+        
+        {% if error %}
+        <div class="alert alert-danger alert-custom mb-4 fade-up">⚠️ {{ error }}</div>
+        {% endif %}
+
+        <div class="card-dark fade-up fade-up-1">
+          <form action="/add_manual" method="POST" id="manualForm">
+
+            <div class="row g-4">
+
+              <!-- Roll Number -->
+              <div class="col-md-6">
+                <label class="form-label">Roll Number</label>
+                <input type="text" name="roll_number" class="form-control"
+                       placeholder="e.g. 22JK1A0597" 
+                       pattern="^(22JK|23JK|24JK|25JK).{6}$" 
+                       minlength="10" maxlength="10"
+                       title="Roll number must be exactly 10 characters and start with 22JK, 23JK, 24JK, or 25JK" required>
+                <div class="input-hint">Student Identification Number</div>
+              </div>
+
+              <!-- Academic Year -->
+              <div class="col-md-6" id="academicYearContainer">
+                <label class="form-label">Academic Year / Semester</label>
+                <select name="academic_year" id="academicYearSelect" class="form-select" required>
+                  <option value="" disabled selected>Select Semester</option>
+                  <option value="1st Year (1-1)">1st Year (1-1)</option>
+                  <option value="1st Year (1-2)">1st Year (1-2)</option>
+                  <option value="2nd Year (2-1)">2nd Year (2-1)</option>
+                  <option value="2nd Year (2-2)">2nd Year (2-2)</option>
+                  <option value="3rd Year (3-1)">3rd Year (3-1)</option>
+                  <option value="3rd Year (3-2)">3rd Year (3-2)</option>
+                  <option value="4th Year (4-1)">4th Year (4-1)</option>
+                  <option value="4th Year (4-2)">4th Year (4-2)</option>
+                </select>
+                <div class="input-hint">Year and semester of the record</div>
+              </div>
+
+              <!-- Study Hours -->
+              <div class="col-md-6">
+                <label class="form-label">Study Hours / Day</label>
+                <input type="number" name="study_hours" id="studyHoursInput" class="form-control"
+                       min="0" max="6" step="0.5" placeholder="e.g. 4" required>
+                <div class="input-hint">Hours spent studying daily</div>
+              </div>
+
+              <!-- Attendance -->
+              <div class="col-md-6">
+                <label class="form-label">Attendance (%)</label>
+                <input type="number" name="attendance" class="form-control"
+                       min="0" max="100" step="0.1" placeholder="e.g. 85" required>
+                <div class="input-hint">Class attendance percentage</div>
+              </div>
+
+              <!-- Assignments Completed -->
+              <div class="col-md-6">
+                <label class="form-label">Assignments Completed</label>
+                <input type="number" name="assignments_completed" class="form-control"
+                       min="0" max="10" step="1" placeholder="e.g. 8" required>
+                <div class="input-hint">Out of 10 total assignments</div>
+              </div>
+
+              <!-- Previous Grade -->
+              <div class="col-md-6" id="prevGradeContainer">
+                <label class="form-label">Previous Percentage</label>
+                <input type="number" name="previous_grade" id="prevGradeInput" class="form-control"
+                       min="0" max="100" step="0.1" placeholder="e.g. 72" required>
+                <div class="input-hint">Percentage from prior semester</div>
+              </div>
+
+              <!-- Participation -->
+              <div class="col-md-6">
+                <label class="form-label">Class Participation Score</label>
+                <input type="number" name="participation" class="form-control"
+                       min="1" max="10" step="0.5" placeholder="e.g. 7" required>
+                <div class="input-hint">Engagement score (1–10)</div>
+              </div>
+
+              <!-- Sleep Hours -->
+              <div class="col-md-6">
+                <label class="form-label">Sleep Hours / Night</label>
+                <input type="number" name="sleep_hours" id="sleepHoursInput" class="form-control"
+                       min="0" max="9" step="0.5" placeholder="e.g. 7" required>
+                <div class="input-hint">Average nightly sleep</div>
+              </div>
+
+              <!-- Internet Usage -->
+              <div class="col-md-6">
+                <label class="form-label">Internet Usage (hrs/day)</label>
+                <input type="number" name="internet_usage" id="internetUsageInput" class="form-control"
+                       min="0" max="17" step="0.5" placeholder="e.g. 3">
+                <div class="input-hint">Recreational screen time</div>
+              </div>
+
+              <!-- Final Score (Crucial for manual entry) -->
+              <div class="col-md-6">
+                <label class="form-label">Actual Final Score</label>
+                <input type="number" name="final_score" class="form-control"
+                       min="0" max="100" step="0.1" placeholder="e.g. 88" required style="border-color: var(--accent); background: rgba(0,0,0,0.2);">
+                <div class="input-hint" style="color: var(--accent)">The actual score achieved</div>
+              </div>
+            </div><!-- .row -->
+
+            <div class="divider"></div>
+
+            <div class="d-flex gap-3 flex-wrap">
+              <button type="submit" class="btn-accent" id="submitBtn">
+                <span id="btnText">💾 Save Data</span>
+                <span id="btnLoader" style="display:none">⏳ Saving…</span>
+              </button>
+              <button type="reset" class="btn-outline">↺ Reset</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('manualForm').addEventListener('submit', () => {
+  document.getElementById('btnText').style.display = 'none';
+  document.getElementById('btnLoader').style.display = 'inline';
+  document.getElementById('submitBtn').disabled = true;
+});
+
+// Auto-fill Final Score Logic
+const inputsToWatch = [
+  'study_hours', 'attendance', 'assignments_completed',
+  'previous_grade', 'participation', 'sleep_hours', 'internet_usage'
+];
+const finalScoreInput = document.querySelector('input[name="final_score"]');
+
+function updatePredictedScore() {
+  const form = document.getElementById('manualForm');
+  const fd = new FormData(form);
+  const payload = {};
+  let allFilled = true;
+  
+  inputsToWatch.forEach(name => {
+    const el = document.querySelector(`input[name="${name}"]`);
+    if (el && el.required && !el.value && el.offsetParent !== null) {
+      allFilled = false;
+    }
+    payload[name] = fd.get(name);
+  });
+  
+  if (!allFilled) return;
+
+  fetch('/api/predict_score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.score !== undefined) {
+      finalScoreInput.value = data.score;
+      finalScoreInput.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+      setTimeout(() => { finalScoreInput.style.backgroundColor = 'rgba(0,0,0,0.2)'; }, 400);
+    }
+  })
+  .catch(err => console.error("Error predicting score:", err));
+}
+
+inputsToWatch.forEach(name => {
+  const el = document.querySelector(`input[name="${name}"]`);
+  if (el) {
+    el.addEventListener('input', updatePredictedScore);
+  }
+});
+
+document.getElementById('academicYearSelect')?.addEventListener('change', function() {
+  const prevGradeContainer = document.getElementById('prevGradeContainer');
+  const prevGradeInput = document.getElementById('prevGradeInput');
+  if (this.value === '1st Year (1-1)') {
+    prevGradeContainer.style.display = 'none';
+    prevGradeInput.required = false;
+    prevGradeInput.value = ''; 
+  } else {
+    prevGradeContainer.style.display = 'block';
+    prevGradeInput.required = true;
+  }
+  updatePredictedScore();
+});
+</script>
+{% endblock %}

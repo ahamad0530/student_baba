@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: student-baba
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app -c gunicorn_config.py"
+    disk:
+      name: student-baba-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATA_DIR
+        value: /data

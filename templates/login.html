@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Student Performance Prediction{% endblock %}
+
+{% block content %}
+
+<!-- Student Splash Screen -->
+<div class="splash-overlay" id="splashScreen">
+    <div style="text-align:center;">
+        <div class="student-anim">🎓</div>
+        <div class="splash-text">Student Performance Portal</div>
+        <div style="margin-top: 16px; display: flex; gap: 14px; justify-content: center; font-size: 2rem;">
+            <span style="animation: bounceRotate 2s infinite 0.2s;">📚</span>
+            <span style="animation: bounceRotate 2s infinite 0.5s;">✏️</span>
+            <span style="animation: bounceRotate 2s infinite 0.8s;">📊</span>
+            <span style="animation: bounceRotate 2s infinite 1.1s;">🏆</span>
+        </div>
+        <p style="margin-top: 20px; color: var(--muted); font-family: 'Poppins', sans-serif; font-size: 0.9rem;">
+            Loading your academic dashboard...
+        </p>
+    </div>
+</div>
+
+<section class="login-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card-dark fade-up">
+                    <div class="text-center mb-4">
+                        <div class="feature-icon mx-auto">🔐</div>
+                        <h2 class="section-title">Welcome <span>Back</span></h2>
+                        <p class="section-sub">Login to access your complete academic analytics</p>
+                    </div>
+
+                    {% if error %}
+                    <div class="alert alert-custom mb-4" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+
+                    <form action="{{ url_for('login') }}" method="POST">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Roll Number</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Enter Roll Number (e.g. 22JK1A0585)" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Last 4 characters of Roll Number" required>
+                        </div>
+                        <button type="submit" class="btn-accent w-100 justify-content-center">
+                            Login into Account
+                        </button>
+                    </form>
+                    
+                    <!-- <div class="mt-4 text-center">
+                        <p class="text-muted-custom small">Use your <strong>Roll Number</strong> as username and the <strong>last 4 characters</strong> as password.</p>
+                    </div> -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Show splash for 2.5s, then fade it out to reveal login form
+  window.addEventListener('DOMContentLoaded', function () {
+    var splash = document.getElementById('splashScreen');
+    setTimeout(function () {
+      splash.classList.add('hidden');
+      // Remove from DOM completely after fade-out finishes
+      setTimeout(function () {
+        splash.style.display = 'none';
+      }, 800);
+    }, 2500);
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Database — Student Performance Prediction{% endblock %}
+
+{% block content %}
+<section style="padding: 50px 0;">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 fade-up">
+      <div>
+        <div class="hero-tag" style="margin-bottom:14px">🗄️ Prediction History</div>
+        <h1 class="section-title mb-0" style="font-size:2rem">Stored Predictions Database</h1>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="/view_csv" class="btn-outline">📊 View Base Data</a>
+        <a href="/" class="btn-outline">🏠 Back Home</a>
+      </div>
+    </div>
+    
+    <div class="card-dark fade-up fade-up-1" style="padding: 20px;">
+      <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+        {{ table | safe }}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Customizing the pandas HTML table to match the dark theme */
+  table.dataframe {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    color: var(--text);
+  }
+  table.dataframe th, table.dataframe td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: left;
+    white-space: nowrap;
+  }
+  table.dataframe th {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--accent2);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  table.dataframe tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+</style>
+{% endblock %}

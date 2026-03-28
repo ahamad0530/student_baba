@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}Predict — Student Performance Prediction{% endblock %}
+
+{% block content %}
+<section style="padding: 50px 0 80px;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+
+        <!-- Header -->
+        <div class="text-center mb-5 fade-up">
+          <div class="hero-tag" style="margin-bottom:14px">🔮 Prediction Engine</div>
+          <h1 class="section-title" style="font-size:2rem">Student Performance Predictor</h1>
+          <p class="section-sub">Fill in the student's academic details to get a predicted final score.</p>
+        </div>
+
+        {% if error %}
+        <div class="alert-custom mb-4 fade-up">⚠️ {{ error }}</div>
+        {% endif %}
+
+        <div class="card-dark fade-up fade-up-1">
+          <form action="/result" method="POST" id="predictForm">
+
+            <div class="row g-4">
+
+              <!-- Roll Number -->
+              <div class="col-md-6">
+                <label class="form-label">Roll Number</label>
+                <input type="text" name="roll_number" class="form-control"
+                       placeholder="e.g. 22JK1A0597" 
+                       pattern="^(22JK|23JK|24JK|25JK).{6}$" 
+                       minlength="10" maxlength="10"
+                       title="Roll number must be exactly 10 characters and start with 22JK, 23JK, 24JK, or 25JK" required>
+                <div class="input-hint">Student Identification Number (must start with 22JK-25JK)</div>
+              </div>
+
+              <!-- Academic Year -->
+              <div class="col-md-6" id="academicYearContainer">
+                <label class="form-label">Academic Year / Semester</label>
+                <select name="academic_year" id="academicYearSelect" class="form-select" required>
+                  <option value="" disabled selected>Select Semester</option>
+                  <option value="1st Year (1-1)">1st Year (1-1)</option>
+                  <option value="1st Year (1-2)">1st Year (1-2)</option>
+                  <option value="2nd Year (2-1)">2nd Year (2-1)</option>
+                  <option value="2nd Year (2-2)">2nd Year (2-2)</option>
+                  <option value="3rd Year (3-1)">3rd Year (3-1)</option>
+                  <option value="3rd Year (3-2)">3rd Year (3-2)</option>
+                  <option value="4th Year (4-1)">4th Year (4-1)</option>
+                  <option value="4th Year (4-2)">4th Year (4-2)</option>
+                </select>
+                <div class="input-hint">Current year and semester</div>
+              </div>
+
+              <!-- Study Hours -->
+              <div class="col-md-6">
+                <label class="form-label">Study Hours / Day</label>
+                <input type="number" name="study_hours" id="studyHoursInput" class="form-control"
+                       min="0" max="6" step="0.5" placeholder="e.g. 4" required>
+                <div class="input-hint">Hours spent studying daily <span class="range-badge">0–6</span></div>
+              </div>
+
+              <!-- Attendance -->
+              <div class="col-md-6">
+                <label class="form-label">Attendance (%)</label>
+                <input type="number" name="attendance" class="form-control"
+                       min="0" max="100" step="0.1" placeholder="e.g. 85" required>
+                <div class="input-hint">Class attendance percentage <span class="range-badge">0–100</span></div>
+              </div>
+
+              <!-- Assignments Completed -->
+              <div class="col-md-6">
+                <label class="form-label">Assignments Completed</label>
+                <input type="number" name="assignments_completed" class="form-control"
+                       min="0" max="10" step="1" placeholder="e.g. 8" required>
+                <div class="input-hint">Out of 10 total assignments <span class="range-badge">0–10</span></div>
+              </div>
+
+              <!-- Previous Grade -->
+              <div class="col-md-6" id="prevGradeContainer">
+                <label class="form-label">Previous Percentage</label>
+                <input type="number" name="previous_grade" id="prevGradeInput" class="form-control"
+                       min="0" max="100" step="0.1" placeholder="e.g. 72" required>
+                <div class="input-hint">Percentage from previous semester <span class="range-badge">0–100</span></div>
+              </div>
+
+              <!-- Participation -->
+              <div class="col-md-6">
+                <label class="form-label">Class Participation Score</label>
+                <input type="number" name="participation" class="form-control"
+                       min="1" max="10" step="0.5" placeholder="e.g. 7" required>
+                <div class="input-hint">Engagement score out of 10 <span class="range-badge">1–10</span></div>
+              </div>
+
+              <!-- Sleep Hours -->
+              <div class="col-md-6">
+                <label class="form-label">Sleep Hours / Night</label>
+                <input type="number" name="sleep_hours" id="sleepHoursInput" class="form-control"
+                       min="0" max="9" step="0.5" placeholder="e.g. 7" required>
+                <div class="input-hint">Average nightly sleep <span class="range-badge">0–9</span></div>
+              </div>
+
+              <!-- Internet Usage -->
+              <div class="col-12">
+                <label class="form-label">Recreational Internet Usage (hrs/day)</label>
+                <input type="number" name="internet_usage" id="internetUsageInput" class="form-control"
+                       min="0" max="17" step="0.5" placeholder="e.g. 3">
+                <div class="input-hint">Non-study screen time per day <span id="internetBadge" class="range-badge">0–17</span></div>
+              </div>
+
+            </div><!-- .row -->
+
+            <!-- Hours Tracker -->
+            <div id="hoursTracker" class="mt-4 p-4 rounded" style="background: rgba(45, 96, 255, 0.08); border: 1px solid rgba(45, 96, 255, 0.2);">
+              <div class="d-flex justify-content-between align-items-center">
+                <span style="font-family: 'Poppins', sans-serif; font-size: 0.95rem; font-weight: 600; color: var(--text);">
+                  Daily Time Allocation (Max 24h)
+                  <div style="font-size: 0.8rem; font-weight: 400; color: var(--muted); margin-top: 2px;">Includes 7 hrs standard college duration</div>
+                </span>
+                <span style="font-family: 'Poppins', sans-serif; font-size: 1.15rem; font-weight: 700;">
+                  <span id="totalHoursText" style="color: var(--accent2);">0</span> <span style="color: var(--muted); font-size: 0.9rem;">/ 24 hrs</span>
+                </span>
+              </div>
+              <div class="prog-track mt-2" style="height: 8px;">
+                <div id="hoursBar" class="prog-fill" style="width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.3s ease, background 0.3s ease;"></div>
+              </div>
+              <div id="hoursError" class="mt-2" style="display: none; color: var(--red); font-size: 0.85rem; font-weight: 500;">⚠️ Total hours cannot exceed 24! Please adjust your inputs.</div>
+            </div>
+
+
+
+            <div class="divider"></div>
+
+            <div class="d-flex gap-3 flex-wrap">
+              <button type="submit" class="btn-accent" id="submitBtn">
+                <span id="btnText">🔮 Predict Performance</span>
+                <span id="btnLoader" style="display:none">⏳ Predicting…</span>
+              </button>
+              <button type="reset" class="btn-outline">↺ Reset</button>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Info note -->
+        <div class="card-dark mt-4 fade-up fade-up-3" style="padding:18px 22px">
+          <p style="font-size:.85rem;color:var(--muted);margin:0">
+            ℹ️ The prediction model was trained on <strong style="color:var(--text)">1,200 student records</strong>
+            using Linear Regression (R² = 0.8957). Predictions are estimates for educational purposes.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.getElementById('predictForm').addEventListener('submit', () => {
+  document.getElementById('btnText').style.display = 'none';
+  document.getElementById('btnLoader').style.display = 'inline';
+  document.getElementById('submitBtn').disabled = true;
+});
+
+document.getElementById('academicYearSelect')?.addEventListener('change', function() {
+  const prevGradeContainer = document.getElementById('prevGradeContainer');
+  const prevGradeInput = document.getElementById('prevGradeInput');
+  // Only hide previous grade for 1st Year, Semester 1 (1-1)
+  if (this.value === '1st Year (1-1)') {
+    prevGradeContainer.style.display = 'none';
+    prevGradeInput.required = false;
+    prevGradeInput.value = ''; 
+  } else {
+    prevGradeContainer.style.display = 'block';
+    prevGradeInput.required = true;
+  }
+});
+
+
+
+// Daily Hours Calculator
+const studyInput = document.getElementById('studyHoursInput');
+const sleepInput = document.getElementById('sleepHoursInput');
+const internetInput = document.getElementById('internetUsageInput');
+const totalHoursText = document.getElementById('totalHoursText');
+const hoursBar = document.getElementById('hoursBar');
+const hoursError = document.getElementById('hoursError');
+
+function calculateHours() {
+  const study = parseFloat(studyInput?.value) || 0;
+  const sleep = parseFloat(sleepInput?.value) || 0;
+  const internet = parseFloat(internetInput?.value) || 0;
+  const COLLEGE_HOURS = 7;
+  const total = COLLEGE_HOURS + study + sleep + internet;
+  
+  const maxInternet = Math.max(0, 24 - COLLEGE_HOURS - study - sleep);
+  if(internetInput) internetInput.max = maxInternet;
+  const intBadge = document.getElementById('internetBadge');
+  if(intBadge) intBadge.innerText = '0–' + maxInternet;
+
+  totalHoursText.innerText = total;
+  
+  const percentage = Math.min((total / 24) * 100, 100);
+  hoursBar.style.width = percentage + '%';
+  
+  if (total > 24) {
+    hoursError.style.display = 'block';
+    hoursBar.style.background = 'var(--red)';
+    totalHoursText.style.color = 'var(--red)';
+    submitBtn.disabled = true;
+  } else {
+    hoursError.style.display = 'none';
+    hoursBar.style.background = 'linear-gradient(90deg, var(--accent), var(--accent2))';
+    totalHoursText.style.color = 'var(--accent2)';
+    submitBtn.disabled = false;
+  }
+}
+
+studyInput?.addEventListener('input', calculateHours);
+sleepInput?.addEventListener('input', calculateHours);
+internetInput?.addEventListener('input', calculateHours);
+
+// Initialize with baseline values
+calculateHours();
+</script>
+{% endblock %}

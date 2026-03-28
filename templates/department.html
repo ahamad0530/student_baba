@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Department — Student Performance Prediction{% endblock %}
+
+{% block content %}
+<section style="padding: 100px 0; min-height: 80vh;">
+  <div class="container">
+    <div id="dept-welcome" class="text-center mb-5 fade-up">
+      <div class="hero-tag" style="margin-bottom:14px">🏢 Academic Hub</div>
+      <h1 class="section-title">Academic Departments</h1>
+      <p class="section-sub">Empowering students through data-driven academic excellence. Select a department from the menu to see its specialized focus.</p>
+    </div>
+
+    <!-- CSE Section -->
+    <div id="cse" class="dept-section" style="display:none; animation: fadeIn 0.5s ease forward;">
+      <h2 class="text-center mb-4" style="color: var(--accent);">Computer Science & Engineering (CSE)</h2>
+      <div class="row g-4 justify-content-center">
+        <div class="col-md-5">
+          <div class="card-dark h-100">
+            <h3>Vision & Focus</h3>
+            <p class="feature-text">Integrating advanced AI and data mining into student success monitoring. Personalized growth paths for future software leaders.</p>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="card-dark h-100">
+            <h3>Academic Excellence</h3>
+            <p class="feature-text">Fostering a culture of coding, problem-solving, and software engineering with industry-aligned technologies.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ECE Section -->
+    <div id="ece" class="dept-section" style="display:none; animation: fadeIn 0.5s ease forward;">
+      <h2 class="text-center mb-4" style="color: var(--accent2);">Electronics & Communication Engineering (ECE)</h2>
+      <div class="row g-4 justify-content-center">
+        <div class="col-md-5">
+          <div class="card-dark h-100">
+            <h3>Communication Systems</h3>
+            <p class="feature-text">Mastering signals, circuits, and networks that drive modern connectivity. Bridging hardware and software engineering.</p>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="card-dark h-100">
+            <h3>Innovation in Electronics</h3>
+            <p class="feature-text">Exploring VLSI, embedded systems, and digital processing for next-generation electronic intelligence.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EEE Section -->
+    <div id="eee" class="dept-section" style="display:none; animation: fadeIn 0.5s ease forward;">
+      <h2 class="text-center mb-4" style="color: var(--accent);">Electrical & Electronics Engineering (EEE)</h2>
+      <div class="row g-4 justify-content-center">
+        <div class="col-md-5">
+          <div class="card-dark h-100">
+            <h3>Power Systems</h3>
+            <p class="feature-text">Mastering electrical power generation, transmission, and smart grid technologies for a sustainable energy future.</p>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="card-dark h-100">
+            <h3>Control & Automation</h3>
+            <p class="feature-text">Exploring advanced control theory and industrial automation systems that drive modern manufacturing.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IT Section -->
+    <div id="it" class="dept-section" style="display:none; animation: fadeIn 0.5s ease forward;">
+      <h2 class="text-center mb-4" style="color: var(--accent2);">Information Technology (IT)</h2>
+      <div class="row g-4 justify-content-center">
+        <div class="col-md-5">
+          <div class="card-dark h-100">
+            <h3>Network Security</h3>
+            <p class="feature-text">Securing the digital frontier through robust cybersecurity measures, network auditing, and data protection.</p>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="card-dark h-100">
+            <h3>Web Technologies</h3>
+            <p class="feature-text">Developing scalable web architectures and cloud-based solutions for the next generation of digital services.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI & ML Section -->
+    <div id="aiml-ds" class="dept-section" style="display:none; animation: fadeIn 0.5s ease forward;">
+      <h2 class="text-center mb-4" style="color: var(--accent);">AI & ML and Data Science (DS)</h2>
+      <div class="row g-4 justify-content-center">
+        <div class="col-md-5">
+          <div class="card-dark h-100">
+            <h3>Artificial Intelligence</h3>
+            <p class="feature-text">Building intelligent systems that learn and adapt. Deep dive into algorithms, neural networks, and computer vision.</p>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="card-dark h-100">
+            <h3>Data Analytics</h3>
+            <p class="feature-text">Extracting meaningful insights from complex data. Statistical analysis, big data tools, and visual storytelling.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+  function showDept() {
+    const hash = window.location.hash;
+    const welcome = document.getElementById('dept-welcome');
+    const sections = document.querySelectorAll('.dept-section');
+    
+    // Hide all sections and welcome initially
+    sections.forEach(s => s.style.display = 'none');
+    welcome.style.display = 'none';
+    
+    if (hash && (hash === '#cse' || hash === '#ece' || hash === '#eee' || hash === '#it' || hash === '#aiml-ds')) {
+      const activeSection = document.querySelector(hash);
+      if (activeSection) {
+        activeSection.style.display = 'block';
+      }
+    } else {
+      // Default view if no valid hash is present
+      welcome.style.display = 'block';
+    }
+  }
+
+  // Listen for hash changes (when user clicks navbar options)
+  window.addEventListener('hashchange', showDept);
+  
+  // Initial check on page load
+  window.addEventListener('load', showDept);
+</script>
+
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+{% endblock %}

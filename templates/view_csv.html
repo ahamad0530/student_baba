@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Dataset — Student Performance Prediction{% endblock %}
+
+{% block content %}
+<section style="padding: 50px 0;">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 fade-up">
+      <div>
+        <div class="hero-tag" style="margin-bottom:14px">📂 Raw Data</div>
+        <h1 class="section-title mb-0" style="font-size:2rem">Student Performance Dataset{{ suffix }}</h1>
+      </div>
+      <a href="/" class="btn-outline">🏠 Back Home</a>
+    </div>
+    
+    <div class="card-dark fade-up fade-up-1" style="padding: 20px;">
+      <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+        {{ table | safe }}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Customizing the pandas HTML table to match the dark theme */
+  table.dataframe {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+  table.dataframe th, table.dataframe td {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: left;
+  }
+  table.dataframe th {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--accent2);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  table.dataframe tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+</style>
+{% endblock %}

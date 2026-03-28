@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Home — Student Performance Prediction{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-tag">🎓 Educational Data Mining</div>
+    <h1 class="fade-up">Student Performance <span class="hl">Prediction</span><br>Using Educational Data Mining</h1>
+    <p class="fade-up fade-up-1">
+      Analyze key academic factors and forecast final scores
+      using trained ML models — built for educators and students alike.
+    </p>
+    <!-- <div class="d-flex gap-3 justify-content-center flex-wrap fade-up fade-up-2">
+      <a href="/predict" class="btn-accent">🔮 Start Predicting</a>
+    </div> -->
+  </div>
+</section>
+
+<!-- Stats -->
+<section style="padding: 0 0 60px;">
+  <div class="container">
+    <div class="stat-grid fade-up fade-up-2">
+      <a href="/view_csv" style="text-decoration: none; color: inherit;">
+        <div class="stat-card" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='none'">
+          <div class="stat-icon">🎓</div>
+          <div class="stat-val">{{ stats.total_students }}</div>
+          <div class="stat-lbl">Students Analyzed</div>
+        </div>
+      </a>
+      <a href="/view_csv?filter=average" style="text-decoration: none; color: inherit;">
+        <div class="stat-card" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='none'">
+          <div class="stat-icon">📈</div>
+          <div class="stat-val">{{ stats.avg_score }}</div>
+          <div class="stat-lbl">Average Score</div>
+        </div>
+      </a>
+      <a href="/view_csv?filter=top" style="text-decoration: none; color: inherit;">
+        <div class="stat-card" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='none'">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-val">{{ stats.top_score }}</div>
+          <div class="stat-lbl">Top Score</div>
+        </div>
+      </a>
+      <a href="/view_csv?filter=pass" style="text-decoration: none; color: inherit;">
+        <div class="stat-card" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='none'">
+          <div class="stat-icon">✅</div>
+          <div class="stat-val">{{ stats.pass_rate }}%</div>
+          <div class="stat-lbl">Pass Rate</div>
+        </div>
+      </a>
+      <a href="/view_database" style="text-decoration: none; color: inherit;">
+        <div class="stat-card" style="cursor: pointer; transition: transform 0.2s; border: 1px dashed var(--accent);" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='none'">
+          <div class="stat-icon">🗄️</div>
+          <div class="stat-val">Database</div>
+          <div class="stat-lbl">predictions.db</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section style="padding: 0 0 80px;">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">What This System Does</h2>
+      <p class="section-sub">A complete pipeline from raw data to actionable insights</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card-dark h-100 fade-up fade-up-1">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">Exploratory Data Analysis</div>
+          <div class="feature-text">Visualizes correlations between study habits, attendance, and academic outcomes using seaborn &amp; matplotlib.</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card-dark h-100 fade-up fade-up-2">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-title">ML Model Training</div>
+          <div class="feature-text">Trains Linear Regression, Decision Tree, and Random Forest models — automatically selecting the best performer.</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card-dark h-100 fade-up fade-up-3">
+          <div class="feature-icon">🔮</div>
+          <div class="feature-title">Score Prediction</div>
+          <div class="feature-text">Input 7 academic features and instantly receive a predicted final score, grade, percentile rank, and improvement tips.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Factors -->
+<section style="background: var(--surface); padding: 60px 0;">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Factors Analyzed</h2>
+      <p class="section-sub">Seven key inputs drive our prediction model</p>
+    </div>
+    <div class="row g-3 justify-content-center">
+      {% set factors = [
+        ('📚','Study Hours','Daily hours dedicated to studying'),
+        ('🏫','Attendance','Percentage of classes attended'),
+        ('📝','Assignments','Number of assignments completed out of 10'),
+        ('📋','Previous Percentage','Percentage from previous semester'),
+        ('🙋','Participation','Classroom participation score'),
+        ('😴','Sleep Hours','Average daily sleep duration'),
+        ('📱','Internet Usage','Daily recreational internet hours'),
+      ] %}
+      {% for icon, name, desc in factors %}
+      <div class="col-6 col-md-3">
+        <div class="card-dark text-center" style="padding:20px 14px">
+          <div style="font-size:1.5rem;margin-bottom:8px">{{ icon }}</div>
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">{{ name }}</div>
+          <div class="feature-text" style="font-size:.78rem">{{ desc }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="padding: 70px 0; text-align:center;">
+  <div class="container">
+    <h2 class="section-title mb-3">Ready to Predict?</h2>
+    <p class="section-sub">Enter student data and get an instant performance forecast.</p>
+      <div class="fade-up fade-up-3" style="margin-top:40px">
+        <a href="/start_predict" class="btn-accent" style="font-size:1rem;padding:14px 36px">
+          {% if session.get('role') == 'student' %}
+            View My Result →
+          {% else %}
+            Start Predicting →
+          {% endif %}
+        </a>
+      </div>
+  </div>
+</section>
+
+{% endblock %}
