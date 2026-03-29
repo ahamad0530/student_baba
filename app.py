@@ -22,24 +22,46 @@ app = Flask(__name__)
 # Use SECRET_KEY env var in production, fallback to random for local dev
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(16))
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-# DATA_DIR: on Render this is /data (persistent disk), locally use BASE_DIR
-DATA_DIR   = os.environ.get('DATA_DIR', BASE_DIR)
+# DATA_DIR: on Render this is /data (persistent disk), locally use 'data' folder
+DATA_DIR   = os.environ.get('DATA_DIR', os.path.join(BASE_DIR, 'data'))
 MODEL_PATH = os.path.join(BASE_DIR, 'model.pkl')
 DATA_PATH  = os.path.join(DATA_DIR, 'student_performance.csv')
 SOURCE_CSV = os.path.join(BASE_DIR, 'student_performance.csv')  # bundled original
 
+# Ensure DATA_DIR is writable. Fallback if /data fails (common on Free Tier)
+try:
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR, exist_ok=True)
+except (PermissionError, OSError):
+    logger.warning(f"Could not create {DATA_DIR}, falling back to local 'data' folder")
+    DATA_DIR = os.path.join(BASE_DIR, 'data')
+    os.makedirs(DATA_DIR, exist_ok=True)
+    DATA_PATH = os.path.join(DATA_DIR, 'student_performance.csv')
+
 # Copy CSV to DATA_DIR on first run (so /data has the data file)
 if not os.path.exists(DATA_PATH) and os.path.exists(SOURCE_CSV):
     import shutil
-    os.makedirs(DATA_DIR, exist_ok=True)
     shutil.copy2(SOURCE_CSV, DATA_PATH)
 
 # Load model once at startup
 model = joblib.load(MODEL_PATH)
 
-# Load dataset for dashboard stats
-df = pd.read_csv(DATA_PATH)
-df.fillna(df.median(numeric_only=True), inplace=True)
+# Global df load logic with refresh capability
+def load_current_df():
+    try:
+        if os.path.exists(DATA_PATH):
+            new_df = pd.read_csv(DATA_PATH)
+            new_df.fillna(new_df.median(numeric_only=True), inplace=True)
+            return new_df
+    except Exception as e:
+        logger.error(f"Error loading CSV: {e}")
+    
+    # Fallback to empty with correct columns if file missing/corrupt
+    return pd.DataFrame(columns=['study_hours','attendance','assignments_completed',
+                               'previous_grade','participation','sleep_hours',
+                               'internet_usage','final_score'])
+
+df = load_current_df()
 
 # Initialize predictions DB
 def init_db():
@@ -161,11 +183,13 @@ def require_login():
 
 @app.route('/')
 def index():
+    global df
+    df = load_current_df() # Refresh to see new data from other worker/process
     stats = {
         'total_students': len(df),
-        'avg_score':      round(df['final_score'].mean(), 1),
-        'top_score':      round(df['final_score'].max(), 1),
-        'pass_rate':      round((df['final_score'] >= 50).mean() * 100, 1),
+        'avg_score':      round(df['final_score'].mean() if not df.empty else 0, 1),
+        'top_score':      round(df['final_score'].max() if not df.empty else 0, 1),
+        'pass_rate':      round((df['final_score'] >= 50).mean() * 100 if not df.empty else 0, 1),
     }
     return render_template('index.html', stats=stats)
 
@@ -174,11 +198,14 @@ def index():
 
 @app.route('/dashboard')
 def dashboard():
+    global df
+    df = load_current_df() # Refresh
+    
     # Summary metrics for the top cards
     total_records = len(df)
-    avg_score = round(df['final_score'].mean(), 1)
-    pass_rate = round((df['final_score'] >= 50).mean() * 100, 1)
-    top_performers = int((df['final_score'] >= 90).sum())
+    avg_score = round(df['final_score'].mean(), 1) if total_records > 0 else 0
+    pass_rate = round((df['final_score'] >= 50).mean() * 100, 1) if total_records > 0 else 0
+    top_performers = int((df['final_score'] >= 90).sum()) if total_records > 0 else 0
 
     # Get the latest 100 results, assuming latest are at the bottom of the dataset
     recent_results = df.tail(100).iloc[::-1].to_dict(orient='records')
@@ -379,6 +406,7 @@ def contact():
 @app.route('/view_csv', methods=['GET'])
 def view_csv():
     global df
+    df = load_current_df() # Refresh
     filter_type = request.args.get('filter')
     
     display_df = df.copy()
@@ -596,9 +624,11 @@ def add_manual():
             new_entry['final_score'] = score
             df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
             try:
-                df.drop(columns=['grade_bin', 'att_bin'], errors='ignore').to_csv(DATA_PATH, index=False)
-            except Exception:
-                pass
+                save_df = df.drop(columns=['grade_bin', 'att_bin'], errors='ignore')
+                save_df.to_csv(DATA_PATH, index=False)
+                logger.info(f"CSV updated successfully at {DATA_PATH}")
+            except Exception as e:
+                logger.error(f"Failed to save CSV: {e}")
 
             # Store in Database
             try:
@@ -703,9 +733,11 @@ def result():
         new_entry['final_score'] = score
         df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
         try:
-            df.drop(columns=['grade_bin', 'att_bin'], errors='ignore').to_csv(DATA_PATH, index=False)
-        except Exception:
-            pass
+            save_df = df.drop(columns=['grade_bin', 'att_bin'], errors='ignore')
+            save_df.to_csv(DATA_PATH, index=False)
+            logger.info(f"CSV updated successfully at {DATA_PATH}")
+        except Exception as e:
+            logger.error(f"Failed to save CSV: {e}")
 
         # Store in SQLite Database
         try:
